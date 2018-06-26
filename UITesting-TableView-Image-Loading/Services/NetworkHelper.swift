@@ -32,14 +32,15 @@ class NetworkHelper {
         urlSession.configuration.requestCachePolicy = .returnCacheDataElseLoad
     }
     func performDataTask(with url: URL, completionHandler: @escaping ((Data) -> Void), errorHandler: @escaping ((Error) -> Void)) {
+        // This will check if there is a request have done before or not
+        let request = URLRequest(url: url)
+        if let response = URLCache.shared.cachedResponse(for: request) {
+            completionHandler(response.data)
+            return
+        }
+        
         self.urlSession.dataTask(with: url){(data: Data?, response: URLResponse?, error: Error?) in
             DispatchQueue.main.async {
-                // This will check if there is a request have done before or not
-                let request = URLRequest(url: url)
-                if let response = URLCache.shared.cachedResponse(for: request) {
-                    completionHandler(response.data)
-                    return
-                }
                 guard let data = data else {
                     errorHandler(NetworkServiceErrors.noDataReceived)
                     return
